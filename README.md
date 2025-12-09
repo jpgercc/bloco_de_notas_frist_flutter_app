@@ -54,7 +54,7 @@ Se tivermos muitos arquivos, inves de declarar imagem por imagem no .yaml podemo
 
 </details>
 
-eu tinha feito algo eu mesmo mas perdi agora ta a bosta da calculadora da IA, e, fica aqui minha nota de repudio a documentação do flutter vao tomar no cu flutters vcs fizeram um blog enorme eu só quero saber qual enigma tenho q digitar pra fazer os bgl pqp pelo amor de deus cara, eles ensinam bem ate mas oq importa nao se acha vtnc documentador do flutter, vai virar jornalista sla cara pqp RESUME RESUME MUITO ESSA EH MINHA NOTA >:C vou continuar usando pq eh oq tem ne q outra alternativa a flutter existe? #luto
+eu tinha feito algo eu mesmo mas perdi agora ta a bosta da calculadora da IA, e, fica aqui minha nota de repudio a documentação do flutter vao tomar no cu flutters vcs fizeram um blog enorme eu só quero saber qual enigma tenho q digitar pra fazer os bgl pqp pelo amor de deus cara, eles ensinam bem ate mas oq importa nao se acha vtnc documentador do flutter, vai virar jornalista sla cara pqp RESUME RESUME MUITO ESSA EH MINHA NOTA >:C vou continuar usando pq eh oq tem ne q outra alternativa a flutter existe? #luto mas pelo menos dart é #muitolegal :D
 
 https://youtu.be/6Jo3r34B8Y0?list=PLqdwHeoSjEN-9aGd-RxaS_2cyD_AKT0c_
 Para fazer um icone, deixa a imagem em tamanho padrao para ico: https://www.appicon.co/
