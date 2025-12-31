@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:frist_flutterapp/models/entry.dart';
 import 'package:frist_flutterapp/providers/diary_provider.dart';
 
@@ -25,7 +26,13 @@ class _EntryScreenState extends State<EntryScreen> {
   void _save() {
     if (_contentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('O conteúdo não pode estar vazio!')),
+        SnackBar(
+          content: Text(
+            'O conteúdo não pode estar vazio!',
+            style: GoogleFonts.courierPrime(),
+          ),
+          backgroundColor: Colors.red[900],
+        ),
       );
       return;
     }
@@ -46,15 +53,54 @@ class _EntryScreenState extends State<EntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.entry == null ? 'Nova Nota' : 'Editar'),
+        backgroundColor: Colors.black,
+        elevation: 0,
+        title: Text(
+          widget.entry == null ? 'Nova Entrada' : 'Editar Entrada',
+          style: GoogleFonts.courierPrime(fontSize: 18),
+        ),
         actions: [
           if (widget.entry != null)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () {
-                Provider.of<DiaryProvider>(context, listen: false).delete(widget.entry!.id);
-                Navigator.pop(context);
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: Colors.grey[900],
+                    title: Text(
+                      'Excluir entrada?',
+                      style: GoogleFonts.courierPrime(),
+                    ),
+                    content: Text(
+                      'Esta ação não pode ser desfeita.',
+                      style: GoogleFonts.courierPrime(color: Colors.grey),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.courierPrime(),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Provider.of<DiaryProvider>(context, listen: false)
+                              .delete(widget.entry!.id);
+                          Navigator.pop(ctx);
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Excluir',
+                          style: GoogleFonts.courierPrime(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
           IconButton(
@@ -62,27 +108,49 @@ class _EntryScreenState extends State<EntryScreen> {
             onPressed: _save,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Colors.grey[800],
+            height: 1,
+          ),
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Título',
+                hintStyle: GoogleFonts.courierPrime(color: Colors.grey),
                 border: InputBorder.none,
               ),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: GoogleFonts.courierPrime(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const Divider(),
+            Container(
+              height: 1,
+              color: Colors.grey[800],
+              margin: const EdgeInsets.symmetric(vertical: 16),
+            ),
             Expanded(
               child: TextField(
                 controller: _contentController,
                 maxLines: null,
-                decoration: const InputDecoration(
+                expands: true,
+                textAlignVertical: TextAlignVertical.top,
+                decoration: InputDecoration(
                   hintText: 'O que você está pensando?',
+                  hintStyle: GoogleFonts.courierPrime(color: Colors.grey),
                   border: InputBorder.none,
+                ),
+                style: GoogleFonts.courierPrime(
+                  fontSize: 16,
+                  height: 1.6,
                 ),
               ),
             ),
@@ -90,5 +158,12 @@ class _EntryScreenState extends State<EntryScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
   }
 }
