@@ -1,7 +1,6 @@
-name: fashion_store_app
-description: An elegant fashion store app in Flutter.
+name: frist_flutterapp
+description: Meu Diário Pessoal.
 publish_to: 'none'
-
 version: 1.0.0+1
 
 environment:
@@ -10,11 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  shared_preferences: ^2.2.0
   cupertino_icons: ^1.0.2
-  carousel_slider: ^5.0.0 # Para o carrossel de imagens na tela de detalhes
-  provider: ^6.0.5 # Para gerenciamento de estado simples do carrinho
-  google_fonts: ^5.1.0 # Para fontes personalizadas (opcional, mas adiciona elegância)
-
+  provider: ^6.0.5
+  google_fonts: ^5.1.0
+  path_provider: ^2.1.2
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +23,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/images/
