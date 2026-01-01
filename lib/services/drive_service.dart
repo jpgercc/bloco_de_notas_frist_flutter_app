@@ -1,7 +1,21 @@
 import 'dart:io';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:http/http.dart' as http;
+
+// Crie esta classe pequena para fornecer o AuthClient que a API exige
+class GoogleAuthClient extends http.BaseClient {
+  final Map<String, String> _headers;
+  final http.Client _client = http.Client();
+
+  GoogleAuthClient(this._headers);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    request.headers.addAll(_headers);
+    return _client.send(request);
+  }
+}
 
 class DriveService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -10,7 +24,12 @@ class DriveService {
 
   Future<drive.DriveApi?> _getDriveApi() async {
     final account = await _googleSignIn.signIn();
-    return account?.getDriveApi();
+    if (account == null) return null;
+
+    final authHeaders = await account.authHeaders;
+    final authenticateClient = GoogleAuthClient(authHeaders);
+
+    return drive.DriveApi(authenticateClient);
   }
 
   Future<void> upload(File file) async {
@@ -19,15 +38,24 @@ class DriveService {
 
     final media = drive.Media(file.openRead(), file.lengthSync());
 
-    // Procura se o arquivo já existe no Drive
-    final list = await api.files.list(q: "name = 'diary.json'", spaces: 'appDataFolder');
+    // Busca o arquivo
+    final list = await api.files.list(
+        q: "name = 'diary.json'",
+        spaces: 'appDataFolder'
+    );
 
     if (list.files != null && list.files!.isNotEmpty) {
-      // Atualiza existente
-      await api.files.update(drive.File(), list.files!.first.id!, uploadMedia: media);
+      // Update
+      await api.files.update(
+          drive.File(),
+          list.files!.first.id!,
+          uploadMedia: media
+      );
     } else {
-      // Cria novo
-      final driveFile = drive.File()..name = 'diary.json'..parents = ['appDataFolder'];
+      // Create
+      final driveFile = drive.File()
+        ..name = 'diary.json'
+        ..parents = ['appDataFolder'];
       await api.files.create(driveFile, uploadMedia: media);
     }
   }
@@ -36,14 +64,21 @@ class DriveService {
     final api = await _getDriveApi();
     if (api == null) return;
 
-    final list = await api.files.list(q: "name = 'diary.json'", spaces: 'appDataFolder');
+    final list = await api.files.list(
+        q: "name = 'diary.json'",
+        spaces: 'appDataFolder'
+    );
     if (list.files == null || list.files!.isEmpty) return;
 
-    final driveFile = await api.files.get(list.files!.first.id!, downloadOptions: drive.DownloadOptions.metadata);
-    final response = await api.files.get(list.files!.first.id!, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
+    final response = await api.files.get(
+        list.files!.first.id!,
+        downloadOptions: drive.DownloadOptions.fullMedia
+    ) as drive.Media;
 
     final List<int> dataStore = [];
-    await response.stream.listen((data) => dataStore.addAll(data)).asFuture();
+    await for (final data in response.stream) {
+      dataStore.addAll(data);
+    }
     await localFile.writeAsBytes(dataStore);
   }
 }
