@@ -17,20 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final diary = Provider.of<DiaryProvider>(context);
-    final totalEntries = diary.entries.length;
-    final totalWords = diary.entries.fold<int>(
-      0,
-          (sum, entry) => sum + entry.content.split(' ').length,
-    );
-
-    final entriesByYear = <int, int>{};
-    for (var entry in diary.entries) {
-      final year = entry.date.year;
-      entriesByYear[year] = (entriesByYear[year] ?? 0) + 1;
-    }
-    final years = entriesByYear.keys.toList()..sort((a, b) => b.compareTo(a));
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -52,22 +38,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   // Indicador discreto de status
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: diary.isConfigured ? Colors.green : Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        diary.isConfigured ? 'Sync On' : 'Offline',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Courier New'),
-                      ),
-                    ],
+                  Selector<DiaryProvider, bool>(
+                    selector: (_, diary) => diary.isConfigured,
+                    builder: (context, isConfigured, _) {
+                      return Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isConfigured ? Colors.green : Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isConfigured ? 'Sync On' : 'Offline',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Courier New'),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -92,9 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
             // Content
             Expanded(
               child: _selectedIndex == 0
-                  ? _buildHomeContent(totalEntries, totalWords)
+                  ? const HomeContent()
                   : _selectedIndex == 1
-                  ? _buildYearsContent(years, entriesByYear)
+                  ? const YearsContent()
                   : const SearchScreen(),
             ),
           ],
@@ -137,8 +128,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
 
-  Widget _buildHomeContent(int totalEntries, int totalWords) {
+class HomeContent extends StatelessWidget {
+  const HomeContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -166,9 +162,15 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStat(totalEntries.toString(), 'ENTRADAS'),
+              Selector<DiaryProvider, int>(
+                selector: (_, diary) => diary.entries.length,
+                builder: (context, count, _) => _buildStat(count.toString(), 'ENTRADAS'),
+              ),
               const SizedBox(width: 80),
-              _buildStat(totalWords.toString(), 'PALAVRAS'),
+              Selector<DiaryProvider, int>(
+                selector: (_, diary) => diary.totalWords,
+                builder: (context, count, _) => _buildStat(count.toString(), 'PALAVRAS'),
+              ),
             ],
           ),
         ],
@@ -200,66 +202,80 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
 
-  Widget _buildYearsContent(List<int> years, Map<int, int> entriesByYear) {
-    if (years.isEmpty) {
-      return const Center(
-        child: Text(
-          'Nenhuma entrada ainda.\nComece a escrever!',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.grey,
-            fontFamily: 'Courier New',
-          ),
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
+class YearsContent extends StatelessWidget {
+  const YearsContent({super.key});
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: years.length,
-      itemBuilder: (context, index) {
-        final year = years[index];
-        final count = entriesByYear[year]!;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: InkWell(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => EntriesByYearScreen(year: year),
+  @override
+  Widget build(BuildContext context) {
+    return Selector<DiaryProvider, List<int>>(
+      selector: (_, diary) => diary.years,
+      builder: (context, years, _) {
+        if (years.isEmpty) {
+          return const Center(
+            child: Text(
+              'Nenhuma entrada ainda.\nComece a escrever!',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey,
+                fontFamily: 'Courier New',
               ),
+              textAlign: TextAlign.center,
             ),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[800]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    year.toString(),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Courier New',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(24),
+          itemCount: years.length,
+          itemBuilder: (context, index) {
+            final year = years[index];
+            return Selector<DiaryProvider, int>(
+              selector: (_, diary) => diary.entriesByYear[year] ?? 0,
+              builder: (context, count, _) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EntriesByYearScreen(year: year),
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[800]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            year.toString(),
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Courier New',
+                            ),
+                          ),
+                          Text(
+                            '$count ${count == 1 ? 'entrada' : 'entradas'}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              fontFamily: 'Courier New',
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  Text(
-                    '$count ${count == 1 ? 'entrada' : 'entradas'}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                      fontFamily: 'Courier New',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+                );
+              }
+            );
+          },
         );
       },
     );
